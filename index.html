@@ -1,160 +1,174 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>富有動態感的聊天視窗</title>
+    <title>輔導服務 | 機器人諮詢</title>
+    <link rel="stylesheet" href="https://static.parastorage.com/services/third-party/fonts/Helvetica/fontFace.css">
+    <link rel="stylesheet" href="https://static.parastorage.com/unpkg/@wix/wix-fonts@1.14.0/madefor.min.css">
+    <link rel="stylesheet" href="https://static.parastorage.com/unpkg/@wix/wix-fonts@1.14.0/madeforDisplay.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #8e44ad, #3498db); display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #chat-container { width: 90%; max-width: 600px; height: 90%; background: #ffffff; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; }
-        #chat-header {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
-            padding: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 1px;
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background-color: #f5f5dc; /* 米色背景 */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .left-section {
+            flex: 1.5;
+            padding: 40px;
+            position: relative;
+            animation: slideIn 1s ease-in-out;
+            background: linear-gradient(135deg, #f5f5dc 50%, #ffffff);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        .left-section h1 {
+            font-family: 'Madefor', sans-serif;
+            font-size: 5em;
+            color: #0827f5;
+            margin: 0 0 30px;
+            animation: fadeIn 2s ease-in-out;
+            background: linear-gradient(90deg, #0827f5, #4f8df5);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .left-section p {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 30px;
+            animation: fadeIn 2s ease-in-out 0.5s;
+        }
+        .cta-button {
+            padding: 25px 50px;
+            font-size: 1.6em;
+            border: 2px solid #0827f5;
+            background: none;
+            color: #0827f5;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s, color 0.3s;
+            margin-top: 30px;
+            animation: bounce 2s infinite alternate;
+            box-shadow: 0 0 10px rgba(8, 39, 245, 0.5);
+        }
+        .cta-button:hover {
+            background: #0827f5;
+            color: #fff;
+            transform: scale(1.05);
+        }
+        .info-section {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            justify-content: space-between;
+            animation: fadeIn 2s ease-in-out 1s;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: radial-gradient(circle at center, rgba(255, 223, 186, 0.3), transparent);
+
+        }
+        .info-card {
+            flex: 1;
+            padding: 30px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #cccccc;
+        }
+        .info-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(120deg, #f5f5dc, #e0e0e0);
+        }
+        .info-card h3 {
+            font-size: 2.2em;
+            color: #0827f5;
+            margin-bottom: 20px;
             position: relative;
             z-index: 1;
-            display: flex;
-            justify-content: center; /* 將文字置中 */
-            align-items: center; /* 垂直方向置中 */
         }
-        #chat-header .clear-icon {
-            position: absolute; /* 確保圖示不干擾文字居中 */
-            right: 15px; /* 調整圖示位置 */
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            transition: transform 0.3s;
+        .info-card p {
+            font-size: 1.4em;
+            color: #333;
+            position: relative;
+            z-index: 1;
         }
-        #chat-header .clear-icon:hover { transform: scale(1.2); }
-        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #f7f9fc; }
-        .message { padding: 10px 15px; border-radius: 20px; max-width: 75%; font-size: 15px; line-height: 1.6; word-wrap: break-word; position: relative; animation: fadeIn 0.5s ease forwards; white-space: pre-wrap; }
-        .user { background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; align-self: flex-end; }
-        .bot { background: #ecf0f3; color: #333; align-self: flex-start; }
-        .message::after { content: ""; position: absolute; width: 0; height: 0; }
-        .user::after { right: -10px; top: 50%; border-width: 10px; border-style: solid; border-color: transparent transparent transparent #2575fc; }
-        .bot::after { left: -10px; top: 50%; border-width: 10px; border-style: solid; border-color: transparent #ecf0f3 transparent transparent; }
-        #input-box { display: flex; padding: 15px; background: white; border-top: 1px solid #ddd; align-items: center; }
-        #message-input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 30px; font-size: 16px; outline: none; transition: all 0.3s ease; }
-        #message-input:focus { border-color: #2575fc; box-shadow: 0 0 10px rgba(37, 117, 252, 0.2); }
-        #send-button { margin-left: 15px; padding: 15px 25px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; border: none; border-radius: 30px; font-size: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        #send-button:hover { background: linear-gradient(135deg, #2575fc, #6a11cb); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .chatbot-container {
+            flex: 1;
+            width: 100%;
+            height: 800px;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 1s ease-in-out;
+            background: linear-gradient(135deg, #ffffff, #f5f5dc);
+            border-radius: 15px;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-header">
-            🌟 國小教師輔導協助AI 🌟
-            <!-- 清除按鈕使用垃圾桶圖示 -->
-            <img id="clear-button" class="clear-icon" src="https://cdn-icons-png.flaticon.com/128/189/189687.png" alt="清除對話">
+    <div class="container">
+        <div class="left-section">
+            <h1>教師輔導協助機器人</h1>
+            <p style="font-weight: bold ;">提供教師更快速實用的輔導策略，成功輔導國小學童!</p>
+            <a href="https://www.guide.edu.tw/" target="_blank" class="cta-button">教育部輔導網站連結~</a>
+            <div class="info-section">
+                <div class="info-card">
+                    <h3>輸入方式1 : 提供學童背景故事與發生事件 <br>  (背景事件盡量越多越詳細!)</h3>
+                    <p>ex: 小明總是不來上課，時不時還會跟不良少年混在一起打架，且父母平時在家裡也不太管小明 <br><div style="color: #0827f5;font-weight: bold;">輸出 : 背景事件分析後的問題、因子、策略</div></p>
+                </div>
+                <div class="info-card">
+                    <h3>輸入方式2 : 詢問相關輔導問題 <br> (國小輔導相關問題為佳!)  </h3>
+                    <p>ex: 相較於一般兒童問題，對於偏差行為兒童，學校端的輔導處遇應特別加強哪些面向?<br><div style="color: #0827f5;font-weight: bold;">輸出 : 針對問題提供的回答</div></p>
+                </div>
+            </div>
         </div>
-        <div id="chat-box"></div>
-        <div id="input-box">
-            <input type="text" id="message-input" placeholder="輸入訊息..." />
-            <button id="send-button">發送</button>
-        </div>
+        <iframe
+            class="chatbot-container"
+            src="https://yokise.github.io/index.html"
+            frameborder="0"
+        ></iframe>
     </div>
-
-    <script>
-        const chatBox = document.getElementById('chat-box');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const clearButton = document.getElementById('clear-button');
-
-        const CHATBOT_ID = "I9MiL5Iftm8f-_ctnUM_o"; // Chatbot ID
-        const API_KEY = "9a014442-ec42-46eb-b819-2bc438ff7c71"; // 金鑰
-        const API_URL = "https://www.chatbase.co/api/v1/chat";
-
-        // 預設訊息
-        function addDefaultMessage() {
-            addMessage("🤖: 老師您好，請問有甚麼需要幫忙的嗎?", 'bot');
-        }
-
-        // 添加訊息到聊天框
-        function addMessage(text, sender, isTypingEffect = false) {
-            const message = document.createElement('div');
-            message.className = `message ${sender}`;
-            chatBox.appendChild(message);
-            chatBox.scrollTop = chatBox.scrollHeight; // 自動滾動到底部
-
-            if (isTypingEffect) {
-                let index = 0;
-                const interval = setInterval(() => {
-                    if (index < text.length) {
-                        message.innerHTML += text[index] === '\n' ? '<br>' : text[index];
-                        index++;
-                    } else {
-                        clearInterval(interval);
-                    }
-                }, 50);
-            } else {
-                message.innerHTML = text.replace(/\n/g, '<br>');
-            }
-        }
-
-        // 呼叫 Chatbase API
-        async function sendMessageToChatbase(message) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        chatbotId: CHATBOT_ID,
-                        messages: [{ content: message, role: "user" }],
-                        stream: false,
-                        temperature: 0.5
-                    }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || "API 回應錯誤");
-                }
-
-                const data = await response.json();
-                return `🤖: ${data.text}`;
-            } catch (error) {
-                console.error("發送訊息失敗：", error);
-                return "🤖: 抱歉，目前無法回應您的訊息。";
-            }
-        }
-
-        // 發送按鈕事件
-        sendButton.addEventListener('click', async () => {
-            const message = messageInput.value.trim();
-            if (message === '') return;
-
-            addMessage(message, 'user');
-            messageInput.value = '';
-
-            const botResponse = await sendMessageToChatbase(message);
-            addMessage(botResponse, 'bot', true);
-        });
-
-        // 清除按鈕事件
-        clearButton.addEventListener('click', () => {
-            chatBox.innerHTML = '';
-            addDefaultMessage();
-        });
-
-        // 按下 Enter 鍵發送
-        messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                sendButton.click();
-            }
-        });
-
-        // 頁面加載時添加預設訊息
-        window.onload = () => {
-            addDefaultMessage();
-        };
-    </script>
 </body>
 </html>
