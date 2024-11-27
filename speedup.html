@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>富有動態感的聊天視窗</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #8e44ad, #3498db); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #chat-container { width: 90%; max-width: 600px; height: 90%; background: #ffffff; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); overflow: hidden; position: relative; }
+        #chat-header {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center; /* 將文字置中 */
+            align-items: center; /* 垂直方向置中 */
+        }
+        #chat-header .clear-icon {
+            position: absolute; /* 確保圖示不干擾文字居中 */
+            right: 15px; /* 調整圖示位置 */
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        #chat-header .clear-icon:hover { transform: scale(1.2); }
+        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #f7f9fc; }
+        .message { padding: 10px 15px; border-radius: 20px; max-width: 75%; font-size: 15px; line-height: 1.6; word-wrap: break-word; position: relative; animation: fadeIn 0.5s ease forwards; white-space: pre-wrap; }
+        .user { background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; align-self: flex-end; }
+        .bot { background: #ecf0f3; color: #333; align-self: flex-start; }
+        .message::after { content: ""; position: absolute; width: 0; height: 0; }
+        .user::after { right: -10px; top: 50%; border-width: 10px; border-style: solid; border-color: transparent transparent transparent #2575fc; }
+        .bot::after { left: -10px; top: 50%; border-width: 10px; border-style: solid; border-color: transparent #ecf0f3 transparent transparent; }
+        #input-box { display: flex; padding: 15px; background: white; border-top: 1px solid #ddd; align-items: center; }
+        #message-input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 30px; font-size: 16px; outline: none; transition: all 0.3s ease; }
+        #message-input:focus { border-color: #2575fc; box-shadow: 0 0 10px rgba(37, 117, 252, 0.2); }
+        #send-button { margin-left: 15px; padding: 15px 25px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; border: none; border-radius: 30px; font-size: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        #send-button:hover { background: linear-gradient(135deg, #2575fc, #6a11cb); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">
+            🌟 國小教師輔導協助AI 🌟
+            <!-- 清除按鈕使用垃圾桶圖示 -->
+            <img id="clear-button" class="clear-icon" src="https://cdn-icons-png.flaticon.com/128/189/189687.png" alt="清除對話">
+        </div>
+        <div id="chat-box"></div>
+        <div id="input-box">
+            <input type="text" id="message-input" placeholder="輸入訊息..." />
+            <button id="send-button">發送</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const clearButton = document.getElementById('clear-button');
+
+        const CHATBOT_ID = "I9MiL5Iftm8f-_ctnUM_o"; // Chatbot ID
+        const API_KEY = "9a014442-ec42-46eb-b819-2bc438ff7c71"; // 金鑰
+        const API_URL = "https://www.chatbase.co/api/v1/chat";
+
+        // 預設訊息
+        function addDefaultMessage() {
+            addMessage("🤖 : 老師您好，請問有甚麼需要幫忙的嗎?", 'bot');
+        }
+
+        // 添加訊息到聊天框
+        function addMessage(text, sender, isTypingEffect = false) {
+            const message = document.createElement('div');
+            message.className = `message ${sender}`;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight; // 自動滾動到底部
+
+            if (isTypingEffect) {
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < text.length) {
+                        message.innerHTML += text[index] === '\n' ? '<br>' : text[index];
+                        index++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 20);
+            } else {
+                message.innerHTML = text.replace(/\n/g, '<br>');
+            }
+        }
+
+        // 呼叫 Chatbase API
+        async function sendMessageToChatbase(message) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        chatbotId: CHATBOT_ID,
+                        messages: [{ content: message, role: "user" }],
+                        stream: false,
+                        temperature: 0.5
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || "API 回應錯誤");
+                }
+
+                const data = await response.json();
+                return `🤖 :  ${data.text}`;
+            } catch (error) {
+                console.error("發送訊息失敗：", error);
+                return "🤖 : 抱歉，目前無法回應您的訊息。";
+            }
+        }
+
+        // 發送按鈕事件
+        sendButton.addEventListener('click', async () => {
+            const message = messageInput.value.trim();
+            if (message === '') return;
+
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            const botResponse = await sendMessageToChatbase(message);
+            addMessage(botResponse, 'bot', true);
+        });
+
+        // 清除按鈕事件
+        clearButton.addEventListener('click', () => {
+            chatBox.innerHTML = '';
+            addDefaultMessage();
+        });
+
+        // 按下 Enter 鍵發送
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        // 頁面加載時添加預設訊息
+        window.onload = () => {
+            addDefaultMessage();
+        };
+    </script>
+</body>
+</html>
