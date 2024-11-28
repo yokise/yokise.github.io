@@ -49,7 +49,6 @@
     <div id="chat-container">
         <div id="chat-header">
             🌟 國小教師輔導協助AI 🌟
-            <!-- 清除按鈕使用垃圾桶圖示 -->
             <img id="clear-button" class="clear-icon" src="https://cdn-icons-png.flaticon.com/128/189/189687.png" alt="清除對話">
         </div>
         <div id="chat-box"></div>
@@ -64,10 +63,6 @@
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
         const clearButton = document.getElementById('clear-button');
-
-        const CHATBOT_ID = "I9MiL5Iftm8f-_ctnUM_o"; // Chatbot ID
-        const API_KEY = "9a014442-ec42-46eb-b819-2bc438ff7c71"; // 金鑰
-        const API_URL = "https://www.chatbase.co/api/v1/chat";
 
         // 預設訊息
         function addDefaultMessage() {
@@ -96,32 +91,26 @@
             }
         }
 
-        // 呼叫 Chatbase API
-        async function sendMessageToChatbase(message) {
+        // 呼叫 Vercel 後端 API
+        async function sendMessageToBackend(message) {
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('/api/sendMessage', {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${API_KEY}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({
-                        chatbotId: CHATBOT_ID,
-                        messages: [{ content: message, role: "user" }],
-                        stream: false,
-                        temperature: 0.5
-                    }),
+                    body: JSON.stringify({ message }),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || "API 回應錯誤");
+                    throw new Error(errorData.error || "API 回應失敗");
                 }
 
                 const data = await response.json();
-                return `🤖 :  ${data.text}`;
+                return `🤖 : ${data.text}`;
             } catch (error) {
-                console.error("發送訊息失敗：", error);
+                console.error("後端請求失敗：", error);
                 return "🤖 : 抱歉，目前無法回應您的訊息。";
             }
         }
@@ -134,7 +123,7 @@
             addMessage(message, 'user');
             messageInput.value = '';
 
-            const botResponse = await sendMessageToChatbase(message);
+            const botResponse = await sendMessageToBackend(message);
             addMessage(botResponse, 'bot', true);
         });
 
