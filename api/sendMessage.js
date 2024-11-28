@@ -10,7 +10,14 @@ export default async function handler(req, res) {
     const API_KEY = process.env.API_KEY;
     const API_URL = 'https://www.chatbase.co/api/v1/chat';
 
+    console.log("CHATBOT_ID:", CHATBOT_ID);
+    console.log("API_KEY:", API_KEY ? "存在" : "未定義");
+
     try {
+        if (!CHATBOT_ID || !API_KEY) {
+            throw new Error('環境變數 CHATBOT_ID 或 API_KEY 未設置');
+        }
+
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -25,6 +32,7 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             const errorData = await response.json();
+            console.error('Chatbase API 錯誤:', errorData);
             throw new Error(errorData.message || 'Chatbase API 回應失敗');
         }
 
@@ -35,3 +43,4 @@ export default async function handler(req, res) {
         res.status(500).json({ error: '無法處理請求', details: error.message });
     }
 }
+
